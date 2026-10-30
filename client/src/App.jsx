@@ -49,7 +49,7 @@ const App = () => {
         </Route>
         <Route path="/print/payslip/:id" element={<PrintPayslip />} />
 
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </>
   );
