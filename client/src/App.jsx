@@ -24,7 +24,7 @@ const App = () => {
             <LoginForm
               role="admin"
               title="Admin Portal"
-              subtitle="Sign in to manage your organization"
+              subtitle="Manage system settings, users, and access permissions."
             />
           }
         />
@@ -35,6 +35,26 @@ const App = () => {
               role="employee"
               title="Employee Portal"
               subtitle="Sign in to access your account"
+            />
+          }
+        />
+        <Route
+          path="/login/hr"
+          element={
+            <LoginForm
+              role="hr"
+              title="HR Portal"
+              subtitle="Manage employee records, attendance, and payroll."
+            />
+          }
+        />
+        <Route
+          path="/login/manager"
+          element={
+            <LoginForm
+              role="manager"
+              title="Manager Portal"
+              subtitle="Review team performance and manage approval requests."
             />
           }
         />
