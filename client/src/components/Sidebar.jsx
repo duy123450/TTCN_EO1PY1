@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { dummyProfileData } from "../assets/mockup-data";
+import { useEffect, useState } from "react"
+import { Link, useLocation } from "react-router-dom"
+import { dummyProfileData } from "../assets/mockup-data"
 import {
   CalendarIcon,
   ChevronRightIcon,
@@ -12,23 +12,23 @@ import {
   SettingsIcon,
   UserIcon,
   XIcon,
-} from "lucide-react";
+} from "lucide-react"
 
 const Sidebar = () => {
-  const { pathname } = useLocation();
-  const [username, setUsername] = useState("");
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const { pathname } = useLocation()
+  const [username, setUsername] = useState("")
+  const [mobileOpen, setMobileOpen] = useState(false)
 
   useEffect(() => {
-    setUsername(dummyProfileData.firstName + " " + dummyProfileData.lastName);
-  }, []);
+    setUsername(dummyProfileData.firstName + " " + dummyProfileData.lastName)
+  }, [])
 
   // Close mobile sidebar on route change
   useEffect(() => {
-    setMobileOpen(false);
-  }, [pathname]);
+    setMobileOpen(false)
+  }, [pathname])
 
-  const role = "" | "EMPLOYEE";
+  const role = "ADMIN" || "EMPLOYEE"
   const navItems = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutGridIcon },
     role === "ADMIN"
@@ -37,11 +37,11 @@ const Sidebar = () => {
     { name: "Leave", href: "/leave", icon: FileTextIcon },
     { name: "Payslips", href: "/payslips", icon: DollarSignIcon },
     { name: "Settings", href: "/settings", icon: SettingsIcon },
-  ];
+  ]
 
   const handleLogout = () => {
-    window.location.href = "/login";
-  };
+    window.location.href = "/login"
+  }
 
   const sidebarContent = (
     <>
@@ -100,7 +100,7 @@ const Sidebar = () => {
       {/* Navigation List */}
       <div className="flex-1 px-3 space-y-0.5 overflow-y-auto">
         {navItems.map((item) => {
-          const isActive = pathname.startsWith(item.href);
+          const isActive = pathname.startsWith(item.href)
           return (
             <Link
               key={item.name}
@@ -118,7 +118,7 @@ const Sidebar = () => {
                 <ChevronRightIcon className="w-3.5 h-3.5 text-indigo-500/50" />
               )}
             </Link>
-          );
+          )
         })}
       </div>
 
@@ -133,7 +133,7 @@ const Sidebar = () => {
         </button>
       </div>
     </>
-  );
+  )
 
   return (
     <>
@@ -165,7 +165,7 @@ const Sidebar = () => {
         {sidebarContent}
       </aside>
     </>
-  );
-};
+  )
+}
 
-export default Sidebar;
+export default Sidebar

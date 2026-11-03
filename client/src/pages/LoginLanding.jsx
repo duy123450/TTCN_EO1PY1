@@ -1,20 +1,19 @@
-import { Link } from "react-router-dom";
-import LoginLeftSide from "../components/LoginLeftSide";
+import { Link } from "react-router-dom"
+import LoginLeftSide from "../components/LoginLeftSide"
 import {
   ArrowRightIcon,
   BriefcaseBusinessIcon,
   ShieldIcon,
   UserIcon,
   UsersIcon,
-} from "lucide-react";
+} from "lucide-react"
 
 const LoginLanding = () => {
   const portalOptions = [
     {
       to: "/login/admin",
       title: "Admin Portal",
-      description:
-        "Manage your organization, users, and system settings.",
+      description: "Manage your organization, users, and system settings.",
       icon: ShieldIcon,
     },
     {
@@ -27,8 +26,7 @@ const LoginLanding = () => {
     {
       to: "/login/hr",
       title: "HR Portal",
-      description:
-        "Manage employee records, benefits, and HR-related tasks.",
+      description: "Manage employee records, benefits, and HR-related tasks.",
       icon: UsersIcon,
     },
     {
@@ -38,7 +36,7 @@ const LoginLanding = () => {
         "View team performance, manage projects, and access reporting tools.",
       icon: BriefcaseBusinessIcon,
     },
-  ];
+  ]
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
@@ -59,7 +57,7 @@ const LoginLanding = () => {
           {/* Portal List */}
           <div className="space-y-3">
             {portalOptions.map((portal) => {
-              const Icon = portal.icon;
+              const Icon = portal.icon
 
               return (
                 <Link
@@ -85,7 +83,7 @@ const LoginLanding = () => {
                     />
                   </div>
                 </Link>
-              );
+              )
             })}
           </div>
 
@@ -96,7 +94,7 @@ const LoginLanding = () => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default LoginLanding;
+export default LoginLanding

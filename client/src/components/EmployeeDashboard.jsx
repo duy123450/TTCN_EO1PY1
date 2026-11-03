@@ -3,11 +3,11 @@ import {
   CalendarIcon,
   DollarSignIcon,
   FileTextIcon,
-} from "lucide-react";
-import { Link } from "react-router-dom";
+} from "lucide-react"
+import { Link } from "react-router-dom"
 
 const EmployeeDashboard = ({ data }) => {
-  const emp = data.employee;
+  const emp = data.employee
 
   const cards = [
     {
@@ -30,7 +30,7 @@ const EmployeeDashboard = ({ data }) => {
       title: "Latest Payslip",
       subtitle: "Most recent payout",
     },
-  ];
+  ]
   return (
     <div className="animate-fade-in">
       <div className="page-header">
@@ -68,7 +68,7 @@ const EmployeeDashboard = ({ data }) => {
         </Link>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default EmployeeDashboard;
+export default EmployeeDashboard

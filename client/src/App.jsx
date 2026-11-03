@@ -1,15 +1,15 @@
-import { Toaster } from "react-hot-toast";
-import { Routes, Route, Navigate } from "react-router-dom";
-import LoginLanding from "./pages/LoginLanding";
-import Layout from "./pages/Layout";
-import Dashboard from "./pages/Dashboard";
-import Employees from "./pages/Employees";
-import Attendance from "./pages/Attendance";
-import Leave from "./pages/Leave";
-import Payslips from "./pages/Payslips";
-import PrintPayslip from "./pages/PrintPayslip";
-import Settings from "./pages/Settings";
-import LoginForm from "./components/LoginForm";
+import { Toaster } from "react-hot-toast"
+import { Routes, Route, Navigate } from "react-router-dom"
+import LoginLanding from "./pages/LoginLanding"
+import Layout from "./pages/Layout"
+import Dashboard from "./pages/Dashboard"
+import Employees from "./pages/Employees"
+import Attendance from "./pages/Attendance"
+import Leave from "./pages/Leave"
+import Payslips from "./pages/Payslips"
+import PrintPayslip from "./pages/PrintPayslip"
+import Settings from "./pages/Settings"
+import LoginForm from "./components/LoginForm"
 
 const App = () => {
   return (
@@ -72,7 +72,7 @@ const App = () => {
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </>
-  );
-};
+  )
+}
 
-export default App;
+export default App

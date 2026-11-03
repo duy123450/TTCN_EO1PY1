@@ -22,6 +22,82 @@ export const dummyEmployeeDashboardData = {
     },
 };
 
+export const dummyHRDashboardData = {
+    role: "HR",
+    totalEmployees: 3,
+    totalDepartments: 10,
+    todayAttendance: 2,
+    pendingLeaves: 1,
+    pendingOvertime: 2,
+    pendingBusinessTrips: 1,
+    totalPendingRequests: 4,
+    monthlyPayroll: 60000,
+    recentEmployees: [
+        {
+            _id: "69b414a7f8a807df391d7b58",
+            firstName: "David",
+            lastName: "Michael",
+            position: "Associate Business Support",
+            department: "IT Support",
+            employmentStatus: "ACTIVE",
+        },
+        {
+            _id: "69b41439f8a807df391d7b52",
+            firstName: "Alex",
+            lastName: "Matthew",
+            position: "Software Developer",
+            department: "Engineering",
+            employmentStatus: "ACTIVE",
+        },
+    ],
+};
+
+export const dummyManagerDashboardData = {
+    role: "MANAGER",
+    department: "Engineering",
+    totalTeamMembers: 2,
+    presentToday: 1,
+    absentToday: 1,
+    attendanceRate: 50,
+    pendingApprovals: 2,
+    teamMembers: [
+        {
+            _id: "69b41439f8a807df391d7b52",
+            firstName: "Alex",
+            lastName: "Matthew",
+            position: "Software Developer",
+            department: "Engineering",
+            employmentStatus: "ACTIVE",
+        },
+        {
+            _id: "69b411e6f8a807df391d7b13",
+            firstName: "John",
+            lastName: "Doe",
+            position: "Senior Software Developer",
+            department: "Engineering",
+            employmentStatus: "ACTIVE",
+        },
+    ],
+    recentRequests: [
+        {
+            _id: "69b415fcf8a807df391d7be0",
+            employeeName: "John Doe",
+            type: "LEAVE",
+            reason: "Going to visit a temple",
+            status: "PENDING",
+            submittedAt: "2026-03-13T13:49:48.618Z",
+        },
+        {
+            _id: "request_002",
+            employeeName: "Alex Matthew",
+            type: "OVERTIME",
+            reason: "Completing project tasks",
+            status: "PENDING",
+            submittedAt: "2026-03-14T09:00:00.000Z",
+        },
+    ],
+};
+
 export const dummyProfileData = {
     _id: "69b411e6f8a807df391d7b13",
     firstName: "John",

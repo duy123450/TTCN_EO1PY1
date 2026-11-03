@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react"
-import { dummyAdminDashboardData, dummyEmployeeDashboardData } from "../assets/mockup-data"
+import {
+  dummyEmployeeDashboardData,
+  dummyAdminDashboardData,
+} from "../assets/mockup-data"
 import Loading from "../components/Loading"
 import EmployeeDashboard from "../components/EmployeeDashboard"
 import AdminDashboard from "../components/AdminDashboard"
@@ -9,23 +12,24 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    setData(dummyEmployeeDashboardData)
+    setData(dummyAdminDashboardData)
     setTimeout(() => {
       setLoading(false)
     }, 1000)
   }, [])
 
-  if(loading) return <Loading />
-  if(!data) return <p className="text-center text-slate-500 py-12">Failed to load dashboard</p>
+  if (loading) return <Loading />
+  if (!data)
+    return (
+      <p className="text-center text-slate-500 py-12">
+        Failed to load dashboard
+      </p>
+    )
 
-  if(data.role === 'ADMIN')
-    return <AdminDashboard data={data} />
-  else if(data.role === 'HR')
-    return <div>hr dashboard</div>
-  else if(data.role === 'MANAGER')
-    return <div>manager dashboard</div>
-  else
-    return <EmployeeDashboard data={data} />
+  if (data.role === "ADMIN") return <AdminDashboard data={data} />
+  else if (data.role === "HR") return <div>hr dashboard</div>
+  else if (data.role === "MANAGER") return <div>manager dashboard</div>
+  else return <EmployeeDashboard data={data} />
 }
 
 export default Dashboard
