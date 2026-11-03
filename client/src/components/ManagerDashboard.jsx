@@ -5,8 +5,8 @@ import {
   CheckCircle2Icon,
   Clock3Icon,
   UsersIcon,
-} from "lucide-react";
-import { Link } from "react-router-dom";
+} from "lucide-react"
+import { Link } from "react-router-dom"
 
 const ManagerDashboard = ({ data }) => {
   const stats = [
@@ -34,10 +34,10 @@ const ManagerDashboard = ({ data }) => {
       value: `${data.attendanceRate ?? 0}%`,
       accent: "text-sky-600 bg-sky-50",
     },
-  ];
+  ]
 
-  const teamMembers = data.teamMembers ?? [];
-  const recentRequests = data.recentRequests ?? [];
+  const teamMembers = data.teamMembers ?? []
+  const recentRequests = data.recentRequests ?? []
 
   return (
     <div className="animate-fade-in">
@@ -70,7 +70,9 @@ const ManagerDashboard = ({ data }) => {
                 {stat.value}
               </p>
             </div>
-            <stat.icon className={`size-11 shrink-0 rounded-xl p-3 ${stat.accent}`} />
+            <stat.icon
+              className={`size-11 shrink-0 rounded-xl p-3 ${stat.accent}`}
+            />
           </div>
         ))}
       </div>
@@ -81,7 +83,8 @@ const ManagerDashboard = ({ data }) => {
             <div>
               <h2 className="font-semibold text-slate-900">Your team</h2>
               <p className="mt-1 text-sm text-slate-500">
-                {teamMembers.length} {teamMembers.length === 1 ? "member" : "members"}
+                {teamMembers.length}{" "}
+                {teamMembers.length === 1 ? "member" : "members"}
                 {data.department ? ` · ${data.department}` : ""}
               </p>
             </div>
@@ -153,7 +156,9 @@ const ManagerDashboard = ({ data }) => {
                       {request.status}
                     </span>
                   </div>
-                  <p className="mt-3 text-sm text-slate-600">{request.reason}</p>
+                  <p className="mt-3 text-sm text-slate-600">
+                    {request.reason}
+                  </p>
                   {request.submittedAt && (
                     <time
                       className="mt-2 block text-xs text-slate-400"
@@ -180,7 +185,7 @@ const ManagerDashboard = ({ data }) => {
         </section>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default ManagerDashboard;
+export default ManagerDashboard

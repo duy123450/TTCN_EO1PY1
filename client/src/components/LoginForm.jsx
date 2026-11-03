@@ -1,18 +1,18 @@
-import { Link } from "react-router-dom";
-import LoginLeftSide from "./LoginLeftSide";
-import { ArrowLeftIcon, EyeIcon, EyeOffIcon, Loader2Icon } from "lucide-react";
-import { useState } from "react";
+import { Link } from "react-router-dom"
+import LoginLeftSide from "./LoginLeftSide"
+import { ArrowLeftIcon, EyeIcon, EyeOffIcon, Loader2Icon } from "lucide-react"
+import { useState } from "react"
 
 const LoginForm = ({ role, title, subtitle }) => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+  const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-  };
+    e.preventDefault()
+  }
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
@@ -91,7 +91,7 @@ const LoginForm = ({ role, title, subtitle }) => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default LoginForm;
+export default LoginForm
