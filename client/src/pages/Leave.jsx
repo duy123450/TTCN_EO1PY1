@@ -18,7 +18,7 @@ const Leave = () => {
   const isAdmin = false
 
   const fetchLeaves = useCallback(() => {
-    setLeave(dummyLeaveData)
+    setLeaves(dummyLeaveData)
     setTimeout(() => {
       setLoading(false)
     }, 1000)
@@ -30,7 +30,7 @@ const Leave = () => {
 
   if (loading) return <Loading />
 
-  const approveLeaves = leaves.filter((l) => l.status === 'APPROVED')
+  const approvedLeaves = leaves.filter((l) => l.status === 'APPROVED')
   const sickCount = leaves.filter((l) => l.type === 'SICK').length
   const casualCount = leaves.filter((l) => l.type === 'CASUAL').length
   const annualCount = leaves.filter((l) => l.type === 'ANNUAL').length
