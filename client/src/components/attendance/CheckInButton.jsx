@@ -1,55 +1,83 @@
 import { useState } from 'react'
-import { Loader2Icon, LogInIcon, LogOutIcon } from 'lucide-react'
+import { LogInIcon, LogOutIcon } from 'lucide-react'
 
-const CheckInButton = ({ todayRecord, onAction }) => {
-  const [loading, setLoading] = useState(false)
+const CheckInButton = ({
+  openRecord,
+  assignedShifts,
+  onCheckIn,
+  onCheckOut,
+}) => {
+  const [feedback, setFeedback] = useState(null)
+  const [selectedShiftId, setSelectedShiftId] = useState('')
+  const hasOpenSession = Boolean(openRecord)
+  const selectedShift =
+    assignedShifts.find(
+      (shift) => shift.shift_id === Number(selectedShiftId),
+    ) ?? assignedShifts[0]
+  const canCheckIn = hasOpenSession || Boolean(selectedShift)
 
-  const handleAttendance = async () => {
-    setLoading(true)
-    setTimeout(() => {
-      setLoading(false)
-      onAction()
-    }, 1000)
+  const handleAction = () => {
+    setFeedback(null)
+    const result = hasOpenSession ? onCheckOut() : onCheckIn(selectedShift)
+    setFeedback(result)
   }
-
-  if (todayRecord?.checkOut) {
-    return (
-      <div className='flex flex-col items-center justify-center p-8 bg-slate-50 rounded-2xl border border-slate-200'>
-        <h3 className='text-lg font-bold text-slate-900'>Work Day Completed</h3>
-        <p className='text-slate-500 text-sm mt-1'>
-          Great job! See you tomorrow
-        </p>
-      </div>
-    )
-  }
-
-  const isCheckedIn = !!todayRecord?.isCheckedIn
 
   return (
-    <div className='absolute bottom-4 right-4 flex flex-col z-1'>
-      <button
-        onClick={handleAttendance}
-        disabled={loading}
-        className={`w-full max-w-xs flex justify-between items-center gap-8 p-4 rounded-xl bg-linear-to-br text-white ${isCheckedIn ? 'from-slate-700 to-slate-900' : 'from-indigo-600 to-indigo-700'}`}
-      >
-        {loading ? (
-          <Loader2Icon className='size-7 animate-spin' />
-        ) : isCheckedIn ? (
-          <LogOutIcon className='size-7' />
-        ) : (
-          <LogInIcon className='size-7' />
+    <section className='card flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6'>
+      <div>
+        <h2 className='font-semibold text-text-primary'>
+          {hasOpenSession ? 'Attendance session in progress' : 'Today'}
+        </h2>
+        <p className='mt-1 text-sm text-text-secondary'>
+          {hasOpenSession
+            ? `Checked in at ${openRecord.check_in ?? 'time unavailable'}.`
+            : selectedShift
+              ? `Published shift #${selectedShift.shift_id}: ${selectedShift.start_time}–${selectedShift.end_time}.`
+              : 'No published shift is assigned to you for today. Check-in is unavailable.'}
+        </p>
+        {!hasOpenSession && assignedShifts.length > 1 && (
+          <label className='mt-3 flex max-w-sm flex-col gap-1 text-sm text-text-secondary'>
+            Shift for today
+            <select
+              value={selectedShift?.shift_id ?? ''}
+              onChange={(event) => setSelectedShiftId(event.target.value)}
+            >
+              {assignedShifts.map((shift) => (
+                <option key={shift.shift_id} value={shift.shift_id}>
+                  Shift #{shift.shift_id} · {shift.start_time}–{shift.end_time}
+                </option>
+              ))}
+            </select>
+          </label>
         )}
-
-        <div className='relative flex flex-col items-center text-center'>
-          <h2 className='text-lg font-medium mb-1'>
-            {loading ? 'Processing...' : isCheckedIn ? 'Clock Out' : 'Clock In'}
-          </h2>
-          <p className='text-xs opacity-80'>
-            {isCheckedIn ? 'Click to end your shift' : 'Start your work day'}
+        {feedback && (
+          <p
+            role={feedback.ok ? 'status' : 'alert'}
+            className={`mt-2 text-sm ${feedback.ok ? 'text-emerald-700' : 'text-rose-600'}`}
+          >
+            {feedback.message}
           </p>
-        </div>
+        )}
+      </div>
+      <button
+        type='button'
+        onClick={handleAction}
+        disabled={!canCheckIn}
+        className='btn-primary inline-flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-50'
+      >
+        {hasOpenSession ? (
+          <>
+            <LogOutIcon className='size-4' />
+            Check out
+          </>
+        ) : (
+          <>
+            <LogInIcon className='size-4' />
+            Check in
+          </>
+        )}
       </button>
-    </div>
+    </section>
   )
 }
 

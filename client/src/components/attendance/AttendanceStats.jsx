@@ -1,31 +1,81 @@
 import { AlertCircleIcon, CalendarIcon, ClockIcon } from 'lucide-react'
 
+const formatMinutes = (minutes) =>
+  `${Math.floor(minutes / 60)}h ${minutes % 60}m`
+
+const parseDateTime = (value) => {
+  if (typeof value !== 'string' || value.trim() === '') return null
+  const match = value.match(
+    /^(\d{4})-(\d{2})-(\d{2})[ T]([01]\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?$/,
+  )
+  if (!match) return null
+  const [, yearText, monthText, dayText, hourText, minuteText, secondText] =
+    match
+  const year = Number(yearText)
+  const month = Number(monthText)
+  const day = Number(dayText)
+  const date = new Date(year, month - 1, day)
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    return null
+  }
+  date.setHours(Number(hourText), Number(minuteText), Number(secondText ?? 0), 0)
+  return Number.isNaN(date.getTime()) ? null : date
+}
+
 const AttendanceStats = ({ history }) => {
-  const totalPresent = history.filter(
-    (h) => h.status === 'PRESENT' || h.status === 'LATE',
+  const completedSessions = history.filter(
+    (record) => {
+      const checkIn = parseDateTime(record.check_in)
+      const checkOut = parseDateTime(record.check_out)
+      return checkIn && checkOut && checkOut > checkIn
+    },
   ).length
-  const totalLate = history.filter((h) => h.status === 'LATE').length
+  const openSessions = history.filter(
+    (record) =>
+      parseDateTime(record.check_in) &&
+      (record.check_out == null || record.check_out === ''),
+  ).length
+  const recordedMinutes = history.reduce(
+    (total, record) =>
+      typeof record.working_minutes === 'number' &&
+      Number.isFinite(record.working_minutes) &&
+      record.working_minutes >= 0
+        ? total + record.working_minutes
+        : total,
+    0,
+  )
   const stats = [
-    { label: 'Days Present', value: totalPresent, icon: CalendarIcon },
-    { label: 'Late Arrivals', value: totalLate, icon: AlertCircleIcon },
-    { label: 'Avg. Work Hrs', value: '8.5 Hrs', icon: ClockIcon },
+    {
+      label: 'Completed sessions',
+      value: completedSessions,
+      icon: CalendarIcon,
+    },
+    { label: 'Open sessions', value: openSessions, icon: AlertCircleIcon },
+    {
+      label: 'Recorded working time',
+      value: formatMinutes(recordedMinutes),
+      icon: ClockIcon,
+    },
   ]
 
   return (
-    <div className='grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5 mb-8'>
-      {stats.map((s) => (
+    <div className='grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-5'>
+      {stats.map((stat) => (
         <div
-          key={s.label}
-          className='card card-hover p-5 sm:p-6 flex items-center gap-4 relative overflow-hidden group'
+          key={stat.label}
+          className='card flex items-center gap-4 p-5 sm:p-6'
         >
-          <div className='absolute left-0 top-0 bottom-0 w-1 rounded-r-full bg-slate-500/70 group-hover:bg-indigo-500/70' />
-          <div className='p-3 bg-slate-100 rounded-lg group-hover:bg-indigo-50 transition-colors duration-200'>
-            <s.icon className='w-5 h-5 text-slate-600 group-hover:text-indigo-600 transition-colors duration-200' />
+          <div className='rounded-lg bg-slate-100 p-3'>
+            <stat.icon className='size-5 text-slate-600' />
           </div>
           <div>
-            <p className='text-sm text-slate-500'>{s.label}</p>
-            <p className='text-2xl font-medium text-slate-900 tracking-tight'>
-              {s.value}
+            <p className='text-sm text-text-secondary'>{stat.label}</p>
+            <p className='text-xl font-medium tracking-tight text-text-primary'>
+              {stat.value}
             </p>
           </div>
         </div>

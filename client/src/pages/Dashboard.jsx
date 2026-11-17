@@ -1,18 +1,23 @@
 import { useEffect, useState } from 'react'
 import {
   dummyEmployeeDashboardData,
-  dummyAdminDashboardData,
+  dummyManagerDashboardData,
 } from '../assets/mockup-data'
 import Loading from '../components/Loading'
 import EmployeeDashboard from '../components/EmployeeDashboard'
-import AdminDashboard from '../components/AdminDashboard'
+import ManagerDashboard from '../components/ManagerDashboard'
+
+const PREVIEW_ROLE = 'MANAGER'
+const previewDataByRole = {
+  [dummyManagerDashboardData.role]: dummyManagerDashboardData,
+  [dummyEmployeeDashboardData.role]: dummyEmployeeDashboardData,
+}
 
 const Dashboard = () => {
-  const [data, setData] = useState(null)
+  const data = previewDataByRole[PREVIEW_ROLE]
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    setData(dummyEmployeeDashboardData)
     setTimeout(() => {
       setLoading(false)
     }, 1000)
@@ -26,10 +31,16 @@ const Dashboard = () => {
       </p>
     )
 
-  if (data.role === 'ADMIN') return <AdminDashboard data={data} />
-  else if (data.role === 'HR') return <div>hr dashboard</div>
-  else if (data.role === 'MANAGER') return <div>manager dashboard</div>
-  else return <EmployeeDashboard data={data} />
+  if (data.role === 'MANAGER') return <ManagerDashboard />
+  if (data.role === 'EMPLOYEE') {
+    return <EmployeeDashboard data={data} />
+  }
+
+  return (
+    <p className='py-12 text-center text-text-secondary'>
+      Dashboard unavailable for this role.
+    </p>
+  )
 }
 
 export default Dashboard

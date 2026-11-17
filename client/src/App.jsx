@@ -5,11 +5,13 @@ import Layout from './pages/Layout'
 import Dashboard from './pages/Dashboard'
 import Employees from './pages/Employees'
 import Attendance from './pages/Attendance'
-import Leave from './pages/Leave'
-import Payslips from './pages/Payslips'
-import PrintPayslip from './pages/PrintPayslip'
-import Settings from './pages/Settings'
+import Request from './pages/Request'
+import Payroll from './pages/Payroll'
 import LoginForm from './components/LoginForm'
+import Availability from './pages/Availability'
+import WorkSchedule from './pages/WorkSchedule'
+
+const workScheduleElement = <WorkSchedule />
 
 const App = () => {
   return (
@@ -19,32 +21,12 @@ const App = () => {
         <Route path='/login' element={<LoginLanding />} />
 
         <Route
-          path='/login/admin'
-          element={
-            <LoginForm
-              role='admin'
-              title='Admin Portal'
-              subtitle='Manage system settings, users, and access permissions.'
-            />
-          }
-        />
-        <Route
           path='/login/employee'
           element={
             <LoginForm
-              role='employee'
+              role='EMPLOYEE'
               title='Employee Portal'
               subtitle='Sign in to access your account'
-            />
-          }
-        />
-        <Route
-          path='/login/hr'
-          element={
-            <LoginForm
-              role='hr'
-              title='HR Portal'
-              subtitle='Manage employee records, attendance, and payroll.'
             />
           }
         />
@@ -52,7 +34,7 @@ const App = () => {
           path='/login/manager'
           element={
             <LoginForm
-              role='manager'
+              role='MANAGER'
               title='Manager Portal'
               subtitle='Review team performance and manage approval requests.'
             />
@@ -63,11 +45,13 @@ const App = () => {
           <Route path='/dashboard' element={<Dashboard />} />
           <Route path='/employees' element={<Employees />} />
           <Route path='/attendance' element={<Attendance />} />
-          <Route path='/leave' element={<Leave />} />
-          <Route path='/payslips' element={<Payslips />} />
-          <Route path='/settings' element={<Settings />} />
+          <Route path='/request' element={<Request />} />
+          <Route path='/payroll' element={<Payroll />} />
+          <Route path='/availability' element={<Availability />} />
+          <Route path='/my-availability' element={<Availability />} />
+          <Route path='/work-schedule' element={workScheduleElement} />
+          <Route path='/my-schedule' element={workScheduleElement} />
         </Route>
-        <Route path='/print/payslip/:id' element={<PrintPayslip />} />
 
         <Route path='*' element={<Navigate to='/dashboard' replace />} />
       </Routes>

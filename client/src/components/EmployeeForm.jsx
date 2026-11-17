@@ -1,181 +1,140 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { DEPARTMENTS } from '../assets/mockup-data'
 import { Loader2Icon } from 'lucide-react'
 
 const EmployeeForm = ({ initData, onSuccess, onCancel }) => {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const isEditMode = !!initData
+
   const handleSubmit = async (e) => {
     e.preventDefault()
+    const formData = new FormData(e.currentTarget)
+    const employeeData = {
+      ...(initData?.employee_id != null && {
+        employee_id: initData.employee_id,
+      }),
+      ...(initData?.user_id != null && { user_id: initData.user_id }),
+      full_name: formData.get('full_name').trim(),
+      phone: formData.get('phone').trim() || null,
+      date_of_birth: formData.get('date_of_birth') || null,
+      employee_type: formData.get('employee_type'),
+      start_date: formData.get('start_date'),
+      employment_status: formData.get('employment_status').trim() || null,
+      probation_status: formData.get('probation_status').trim() || null,
+    }
+
+    setLoading(true)
+    try {
+      await onSuccess?.(employeeData)
+    } finally {
+      setLoading(false)
+    }
   }
+
   return (
     <form
       onSubmit={handleSubmit}
       className='space-y-6 max-w-3xl animate-fade-in'
     >
-      {/* Personal Info */}
       <div className='card p-5 sm:p-6'>
-        <h3 className='font-medium mb-6 pb-4 border-b border-slate-100'>
+        <h3 className='font-medium mb-6 pb-4 border-b border-border'>
           Personal Information
         </h3>
-        <div className='grid grid-cols-1 sm:grid-cols-2 gap-5 text-sm text-slate-700'>
-          <div>
-            <label className='block mb-2'>First Name</label>
-            <input
-              name='firstName'
-              required
-              defaultValue={initData?.firstName}
-            />
-          </div>
-          <div>
-            <label className='block mb-2'>Last Name</label>
-            <input name='lastName' required defaultValue={initData?.lastName} />
-          </div>
-          <div>
-            <label className='block mb-2'>Phone Number</label>
-            <input name='phone' required defaultValue={initData?.phone} />
-          </div>
-          <div>
-            <label className='block mb-2'>Join Date</label>
-            <input
-              type='date'
-              name='joinDate'
-              required
-              defaultValue={
-                initData?.joinDate
-                  ? new Date(initData.joinDate).toISOString().split('T')[0]
-                  : ''
-              }
-            />
-          </div>
+        <div className='grid grid-cols-1 sm:grid-cols-2 gap-5 text-sm text-text-secondary'>
           <div className='sm:col-span-2'>
-            <label className='block mb-2'>Bio (Optional)</label>
-            <textarea
-              name='bio'
-              defaultValue={initData?.bio}
-              rows={3}
-              className='resize-none'
-              placeholder='Brief description...'
+            <label className='block mb-2' htmlFor='full_name'>
+              Full Name
+            </label>
+            <input
+              id='full_name'
+              name='full_name'
+              required
+              defaultValue={initData?.full_name ?? ''}
+            />
+          </div>
+          <div>
+            <label className='block mb-2' htmlFor='phone'>
+              Phone Number
+            </label>
+            <input
+              id='phone'
+              name='phone'
+              type='tel'
+              defaultValue={initData?.phone ?? ''}
+            />
+          </div>
+          <div>
+            <label className='block mb-2' htmlFor='date_of_birth'>
+              Date of Birth
+            </label>
+            <input
+              id='date_of_birth'
+              name='date_of_birth'
+              type='date'
+              defaultValue={initData?.date_of_birth ?? ''}
             />
           </div>
         </div>
       </div>
-      {/* Employment Details */}
+
       <div className='card p-5 sm:p-6'>
-        <h3 className='text-base font-medium text-slate-900 mb-6 pb-4 border-b border-slate-100'>
+        <h3 className='text-base font-medium text-text-primary mb-6 pb-4 border-b border-border'>
           Employment Details
         </h3>
-        <div className='grid grid-cols-1 sm:grid-cols-2 gap-5 text-sm text-slate-700'>
+        <div className='grid grid-cols-1 sm:grid-cols-2 gap-5 text-sm text-text-secondary'>
           <div>
-            <label className='block mb-2'>Department</label>
-            <select name='department' defaultValue={initData?.department || ''}>
-              <option value=''>Select Department</option>
-              {DEPARTMENTS.map((deptName) => (
-                <option key={deptName} value={deptName}>
-                  {deptName}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className='block mb-2'>Position</label>
-            <input name='position' required defaultValue={initData?.position} />
-          </div>
-          <div>
-            <label className='block mb-2'>Basic Salary</label>
-            <input
-              type='number'
-              name='basicSalary'
-              required
-              min='0'
-              step='0.01'
-              defaultValue={initData?.basicSalary || 0}
-            />
-          </div>
-          <div>
-            <label className='block mb-2'>Allowances</label>
-            <input
-              type='number'
-              name='allowance'
-              required
-              min='0'
-              step='0.01'
-              defaultValue={initData?.allowance || 0}
-            />
-          </div>
-          <div>
-            <label className='block mb-2'>Deductions</label>
-            <input
-              type='number'
-              name='deductions'
-              required
-              min='0'
-              step='0.01'
-              defaultValue={initData?.deductions || 0}
-            />
-          </div>
-          {isEditMode && (
-            <div>
-              <label className='block mb-2'>Status</label>
-              <select
-                name='employmentStatus'
-                defaultValue={initData?.employmentStatus}
-              >
-                <option value='ACTIVE'>Active</option>
-                <option value='INACTIVE'>Inactive</option>
-              </select>
-            </div>
-          )}
-        </div>
-      </div>
-      {/* Account Setup */}
-      <div className='card p-5 sm:p-6'>
-        <h3 className='text-base font-medium text-slate-900 mb-6 pb-4 border-b border-slate-100'>
-          Account Setup
-        </h3>
-        <div className='grid grid-cols-1 sm:grid-cols-2 gap-5 text-sm text-slate-700'>
-          <div className='sm:col-span-2'>
-            <label className='block mb-2'>Work Email</label>
-            <input
-              type='email'
-              name='email'
-              required
-              defaultValue={initData?.email}
-            />
-          </div>
-          {!isEditMode && (
-            <div>
-              <label className='block mb-2'>Temporary Password</label>
-              <input type='password' name='password' required />
-            </div>
-          )}
-          {isEditMode && (
-            <div>
-              <label className='block mb-2'>Change Password (Optional)</label>
-              <input
-                type='password'
-                name='password'
-                placeholder='Leave blank to keep current'
-              />
-            </div>
-          )}
-          <div>
-            <label className='block mb-2'>System Role</label>
+            <label className='block mb-2' htmlFor='employee_type'>
+              Employee Type
+            </label>
             <select
-              name='role'
-              defaultValue={initData?.user?.role || 'EMPLOYEE'}
+              id='employee_type'
+              name='employee_type'
+              required
+              defaultValue={initData?.employee_type ?? ''}
             >
-              <option value='EMPLOYEE'>Employee</option>
-              <option value='HR'>HR</option>
-              <option value='MANAGER'>Manager</option>
-              <option value='ADMIN'>Admin</option>
+              <option value='' disabled>
+                Select employee type
+              </option>
+              <option value='PART_TIME'>Part time</option>
+              <option value='FULL_TIME'>Full time</option>
             </select>
+          </div>
+          <div>
+            <label className='block mb-2' htmlFor='start_date'>
+              Start Date
+            </label>
+            <input
+              id='start_date'
+              name='start_date'
+              type='date'
+              required
+              defaultValue={initData?.start_date ?? ''}
+            />
+          </div>
+          <div>
+            <label className='block mb-2' htmlFor='employment_status'>
+              Employment Status
+            </label>
+            <input
+              id='employment_status'
+              name='employment_status'
+              defaultValue={initData?.employment_status ?? ''}
+            />
+          </div>
+          <div>
+            <label className='block mb-2' htmlFor='probation_status'>
+              Probation Status
+            </label>
+            <input
+              id='probation_status'
+              name='probation_status'
+              defaultValue={initData?.probation_status ?? ''}
+            />
           </div>
         </div>
       </div>
-      {/* Buttons */}
+
       <div className='flex flex-col-reverse sm:flex-row justify-end gap-3 pt-2'>
         <button
           type='button'
