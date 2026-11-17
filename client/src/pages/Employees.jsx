@@ -1,38 +1,70 @@
-import { useCallback, useEffect, useState } from 'react'
-import { dummyEmployeeData, DEPARTMENTS } from '../assets/mockup-data'
+import { useEffect, useRef, useState } from 'react'
+import { dummyEmployeeData } from '../assets/mockup-data'
 import { Plus, Search, X } from 'lucide-react'
 import EmployeeCard from '../components/EmployeeCard'
 import EmployeeForm from '../components/EmployeeForm'
 
 const Employees = () => {
-  const [employees, setEmployees] = useState([])
+  const [employees, setEmployees] = useState(dummyEmployeeData)
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [selectedDept, setSelectedDept] = useState('')
+  const [selectedType, setSelectedType] = useState('')
   const [editEmp, setEditEmp] = useState(null)
   const [showCreateModel, setShowCreateModel] = useState(false)
-
-  const fetchEmployees = useCallback(async () => {
-    setLoading(true)
-    setEmployees(
-      dummyEmployeeData.filter((emp) =>
-        selectedDept ? emp.department === selectedDept : emp,
-      ),
-    )
-    setTimeout(() => {
-      setLoading(false)
-    }, 1000)
-  }, [selectedDept])
-
-  const filtered = employees.filter((emp) =>
-    `${emp.firstName} ${emp.lastName} ${emp.position}`
-      .toLowerCase()
-      .includes(search.toLowerCase()),
-  )
+  const localEmployeeId = useRef(0)
 
   useEffect(() => {
-    fetchEmployees()
-  }, [fetchEmployees])
+    const timeoutId = setTimeout(() => {
+      setLoading(false)
+    }, 1000)
+    return () => clearTimeout(timeoutId)
+  }, [])
+
+  const filtered = employees.filter((emp) => {
+    const matchesType = !selectedType || emp.employee_type === selectedType
+    const matchesSearch = [
+      emp.full_name,
+      emp.phone,
+      emp.employee_type,
+      emp.start_date,
+      emp.employment_status,
+      emp.probation_status,
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase()
+      .includes(search.toLowerCase())
+
+    return matchesType && matchesSearch
+  })
+
+  const handleCreateEmployee = (employeeData) => {
+    localEmployeeId.current += 1
+    setEmployees((currentEmployees) => [
+      ...currentEmployees,
+      {
+        ...employeeData,
+        local_id: `local-${localEmployeeId.current}`,
+      },
+    ])
+    setShowCreateModel(false)
+  }
+
+  const handleUpdateEmployee = (employeeData) => {
+    setEmployees((currentEmployees) =>
+      currentEmployees.map((employee) => {
+        const matchesEmployee =
+          editEmp.employee_id != null
+            ? employee.employee_id === editEmp.employee_id
+            : employee.local_id === editEmp.local_id
+
+        return matchesEmployee
+          ? { ...employee, ...employeeData }
+          : employee
+      }),
+    )
+    setEditEmp(null)
+  }
 
   return (
     <div className='animate-fade-in'>
@@ -60,16 +92,13 @@ const Employees = () => {
           />
         </div>
         <select
-          value={selectedDept}
-          onChange={(e) => setSelectedDept(e.target.value)}
+          value={selectedType}
+          onChange={(e) => setSelectedType(e.target.value)}
           className='max-w-40'
         >
-          <option value=''>All Departments</option>
-          {DEPARTMENTS.map((deptName) => (
-            <option key={deptName} value={deptName}>
-              {deptName}
-            </option>
-          ))}
+          <option value=''>All employee types</option>
+          <option value='PART_TIME'>Part time</option>
+          <option value='FULL_TIME'>Full time</option>
         </select>
       </div>
       {/* Employee cards */}
@@ -80,20 +109,19 @@ const Employees = () => {
       ) : (
         <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5'>
           {filtered.length === 0 ? (
-            <p className='col-span-full text-center py-16 text-slate-400 bg-white rounded-2xl border border-dashed border-slate-200'>
+            <p className='col-span-full text-center py-16 text-text-secondary bg-surface rounded-2xl border border-dashed border-border'>
               No Employees Found
             </p>
           ) : (
             filtered.map((emp) => (
               <EmployeeCard
-                key={emp.id}
+                key={emp.employee_id ?? emp.local_id}
                 employee={emp}
-                onDelete={fetchEmployees}
-                onEdit={(e) => setEditEmp(e)}
+                onEdit={setEditEmp}
               />
             ))
           )}
-          {/* Create employee model */}
+          {/* Create employee modal */}
           {showCreateModel && (
             <div
               className='fixed bg-black/40 backdrop-blur-sm inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto'
@@ -122,10 +150,7 @@ const Employees = () => {
                 </div>
                 <div className='p-6'>
                   <EmployeeForm
-                    onSuccess={() => {
-                      setShowCreateModel(false)
-                      fetchEmployees()
-                    }}
+                    onSuccess={handleCreateEmployee}
                     onCancel={() => {
                       setShowCreateModel(false)
                     }}
@@ -135,7 +160,7 @@ const Employees = () => {
             </div>
           )}
 
-          {/* Edit employee model */}
+          {/* Edit employee modal */}
           {editEmp && (
             <div
               className='fixed bg-black/40 backdrop-blur-sm inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto'
@@ -164,10 +189,7 @@ const Employees = () => {
                 <div className='p-6'>
                   <EmployeeForm
                     initData={editEmp}
-                    onSuccess={() => {
-                      setEditEmp(null)
-                      fetchEmployees()
-                    }}
+                    onSuccess={handleUpdateEmployee}
                     onCancel={() => {
                       setEditEmp(null)
                     }}

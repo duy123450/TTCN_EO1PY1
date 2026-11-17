@@ -1,56 +1,104 @@
-import { useCallback, useEffect, useState } from 'react'
-import { dummyAttendanceData } from '../assets/mockup-data'
-import Loading from '../components/Loading'
-import CheckInButton from '../components/attendance/CheckInButton'
-import AttendanceStats from '../components/attendance/AttendanceStats'
+import { useMemo } from 'react'
+import { useOutletContext } from 'react-router-dom'
+import {
+  dummyEmployeeData,
+  dummyProfileData,
+  dummyShiftData,
+} from '../assets/mockup-data'
 import AttendanceHistory from '../components/attendance/AttendanceHistory'
+import AttendanceStats from '../components/attendance/AttendanceStats'
+import CheckInButton from '../components/attendance/CheckInButton'
+import ManagerAttendanceView from '../components/attendance/ManagerAttendanceView'
+import { useAttendancePreview } from '../context/AttendancePreviewContext'
+
+const getDateKey = (date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+
+const getWeekStart = (dateKey) => {
+  const [year, month, day] = dateKey.split('-').map(Number)
+  const monday = new Date(year, month - 1, day)
+  monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7))
+  return getDateKey(monday)
+}
 
 const Attendance = () => {
-  const [history, setHistory] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [isDeleted, setIsDeleted] = useState(false)
-
-  const fetchData = useCallback(async () => {
-    setHistory(dummyAttendanceData)
-    setTimeout(() => {
-      setLoading(false)
-    }, 1000)
-  }, [])
-
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
-
-  if (loading) return <Loading />
-
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const todayRecord = history.find(
-    (r) => new Date(r.date).toDateString() === today.toDateString(),
+  const { role } = useOutletContext()
+  const {
+    attendanceRecords,
+    publishedShiftsByWeek,
+    checkIn,
+    checkOut,
+  } = useAttendancePreview()
+  const employee = dummyEmployeeData.find(
+    (record) => record.user_id === dummyProfileData.user_id,
   )
 
+  const today = getDateKey(new Date())
+  const todayPublishedShifts =
+    publishedShiftsByWeek[getWeekStart(today)] ?? []
+  const assignedShifts = todayPublishedShifts.filter(
+    (shift) =>
+      shift.employee_id === employee?.employee_id && shift.work_date === today,
+  )
+  const ownHistory = useMemo(
+    () =>
+      attendanceRecords
+        .filter((record) => record.employee_id === employee?.employee_id)
+        .sort((a, b) => (b.check_in ?? '').localeCompare(a.check_in ?? '')),
+    [attendanceRecords, employee?.employee_id],
+  )
+  const openRecord = ownHistory.find(
+    (record) => record.check_out == null || record.check_out === '',
+  )
+
+  if (role === 'MANAGER') {
+    return (
+      <ManagerAttendanceView
+        attendanceRecords={attendanceRecords}
+        employees={dummyEmployeeData}
+        shifts={dummyShiftData}
+      />
+    )
+  }
+
+  if (role !== 'EMPLOYEE') {
+    return (
+      <p className='py-12 text-center text-text-secondary'>
+        Attendance is unavailable for this role.
+      </p>
+    )
+  }
+
   return (
-    <div className='animate-fade-in'>
-      <div className='page-header'>
+    <div className='animate-fade-in space-y-6'>
+      <header className='page-header'>
         <h1 className='page-title'>Attendance</h1>
         <p className='page-subtitle'>
-          Track your work hours and daily check-ins
+          Record and review your check-in and check-out times.
         </p>
-      </div>
-      {isDeleted ? (
-        <div className='mb-8 p-6 bg-rose-50 border-rose-200 rounded-2xl text-center'>
-          <p className='text-rose-600'>
-            You can no longer clock in or out because your employee records have
-            been marked as deleted.
-          </p>
-        </div>
+      </header>
+
+      <p className='rounded-lg border border-gold/30 bg-gold-light/40 px-4 py-3 text-sm text-text-secondary'>
+        Preview only: timestamps use this browser&apos;s local clock and are not
+        verified by a server. Changes reset when the page reloads.
+      </p>
+
+      {!employee ? (
+        <p className='card p-6 text-center text-sm text-text-secondary'>
+          No employee record is available for the current profile.
+        </p>
       ) : (
-        <div className='mb-8'>
-          <CheckInButton todayRecord={todayRecord} onAction={fetchData} />
-        </div>
+        <>
+          <CheckInButton
+            openRecord={openRecord}
+            assignedShifts={assignedShifts}
+            onCheckIn={(shift) => checkIn(employee.employee_id, shift)}
+            onCheckOut={() => checkOut(employee.employee_id)}
+          />
+          <AttendanceStats history={ownHistory} />
+          <AttendanceHistory history={ownHistory} />
+        </>
       )}
-      <AttendanceStats history={history} />
-      <AttendanceHistory history={history} />
     </div>
   )
 }

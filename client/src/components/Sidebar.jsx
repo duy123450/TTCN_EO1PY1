@@ -2,42 +2,59 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { dummyProfileData } from '../assets/mockup-data'
 import {
+  BarChart3Icon,
+  CalendarCheckIcon,
+  CalendarDaysIcon,
   CalendarIcon,
+  ClipboardListIcon,
   ChevronRightIcon,
   DollarSignIcon,
   FileTextIcon,
   LayoutGridIcon,
   LogOutIcon,
   MenuIcon,
-  SettingsIcon,
+  UserRoundIcon,
   UserIcon,
+  UsersIcon,
   XIcon,
 } from 'lucide-react'
 
-const Sidebar = () => {
+const Sidebar = ({ role = 'EMPLOYEE' }) => {
   const { pathname } = useLocation()
-  const [username, setUsername] = useState('')
+  const username = dummyProfileData.full_name ?? dummyProfileData.username
   const [mobileOpen, setMobileOpen] = useState(false)
-
-  useEffect(() => {
-    setUsername(dummyProfileData.firstName + ' ' + dummyProfileData.lastName)
-  }, [])
 
   // Close mobile sidebar on route change
   useEffect(() => {
     setMobileOpen(false)
   }, [pathname])
 
-  const role = '' || 'EMPLOYEE'
-  const navItems = [
+  const managerNavItems = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutGridIcon },
-    role === 'ADMIN'
-      ? { name: 'Employees', href: '/employees', icon: UserIcon }
-      : { name: 'Attendance', href: '/attendance', icon: CalendarIcon },
-    { name: 'Leave', href: '/leave', icon: FileTextIcon },
-    { name: 'Payslips', href: '/payslips', icon: DollarSignIcon },
-    { name: 'Settings', href: '/settings', icon: SettingsIcon },
+    { name: 'Employees', href: '/employees', icon: UsersIcon },
+    { name: 'Availability', href: '/availability', icon: CalendarDaysIcon },
+    { name: 'Work Schedule', href: '/work-schedule', icon: CalendarIcon },
+    { name: 'Attendance', href: '/attendance', icon: CalendarCheckIcon },
+    { name: 'Requests', href: '/request', icon: ClipboardListIcon },
+    { name: 'Payroll', href: '/payroll', icon: DollarSignIcon },
+    { name: 'Reports', href: '/reports', icon: BarChart3Icon },
   ]
+  const employeeNavItems = [
+    { name: 'My Schedule', href: '/my-schedule', icon: CalendarIcon },
+    { name: 'My Availability', href: '/my-availability', icon: CalendarDaysIcon },
+    { name: 'Attendance', href: '/attendance', icon: CalendarCheckIcon },
+    { name: 'My Requests', href: '/request', icon: FileTextIcon },
+    { name: 'My Payroll', href: '/payroll', icon: DollarSignIcon },
+    { name: 'My Profile', href: '/profile', icon: UserRoundIcon },
+  ]
+  const navItems =
+    role === 'MANAGER'
+      ? managerNavItems
+      : role === 'EMPLOYEE'
+        ? employeeNavItems
+        : []
+  const roleLabel =
+    role === 'MANAGER' ? 'Store Manager' : role === 'EMPLOYEE' ? 'Employee' : ''
 
   const handleLogout = () => {
     window.location.href = '/login'
@@ -52,9 +69,9 @@ const Sidebar = () => {
             <UserIcon className='text-white size-7' />
             <div>
               <p className='font-semibold text-[13px] text-white tracking-wide'>
-                HRMS
+                Crane Tea
               </p>
-              <p className='text-[11px] text-slate-500 font-medium'>
+              <p className='text-[11px] text-white/60 font-medium'>
                 Management System
               </p>
             </div>
@@ -62,7 +79,7 @@ const Sidebar = () => {
           {/* Close button on mobile */}
           <button
             onClick={() => setMobileOpen(false)}
-            className='lg:hidden text-slate-400 hover:text-white p-1'
+            className='lg:hidden text-white/60 hover:text-white p-1'
           >
             <XIcon size={20} />
           </button>
@@ -71,19 +88,19 @@ const Sidebar = () => {
 
       {/* User profile card */}
       {username && (
-        <div className='mx-3 mt-4 mb-1 p3 rounded-lg bg-white/3 border border-white/4'>
+        <div className='mx-3 mt-4 mb-1 p-3 rounded-lg bg-white/5 border border-white/10'>
           <div className='flex items-center gap-3'>
-            <div className='w-9 h-9 rounded-lg bg-slate-800 flex items-center justify-center ring-1 ring-white/10 shrink-0'>
-              <span className='text-slate-400 text-xs font-semibold'>
+            <div className='w-9 h-9 rounded-lg bg-brand flex items-center justify-center ring-1 ring-white/10 shrink-0'>
+              <span className='text-gold-light text-xs font-semibold'>
                 {username.charAt(0).toUpperCase()}
               </span>
             </div>
             <div className='min-w-0'>
-              <p className='text-[13px] font-medium text-slate-200 truncate'>
+              <p className='text-[13px] font-medium text-white/90 truncate'>
                 {username}
               </p>
-              <p className='text-[11px] text-slate-500 truncate'>
-                {role === 'ADMIN' ? 'Administrator' : 'Employee'}
+              <p className='text-[11px] text-white/60 truncate'>
+                {roleLabel}
               </p>
             </div>
           </div>
@@ -92,7 +109,7 @@ const Sidebar = () => {
 
       {/* Section label */}
       <div className='px-5 pt-5 pb-2'>
-        <p className='text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500'>
+        <p className='text-[10px] font-semibold uppercase tracking-[0.12em] text-white/50'>
           Navigation
         </p>
       </div>
@@ -105,17 +122,17 @@ const Sidebar = () => {
             <Link
               key={item.name}
               to={item.href}
-              className={`group flex items-center gap-3 px-3 py-2.5 rounded-md text-[13px] font-medium transition-all duration-150 relative ${isActive ? 'bg-indigo-500/12 text-indigo-300' : 'text-slate-300 hover:text-white hover:bg-white/4'}`}
+              className={`group flex items-center gap-3 px-3 py-2.5 rounded-md text-[13px] font-medium transition-all duration-150 relative ${isActive ? 'bg-gold/10 text-gold-light' : 'text-white/75 hover:text-white hover:bg-white/5'}`}
             >
               {isActive && (
-                <div className='absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-indigo-500' />
+                <div className='absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-gold' />
               )}
               <item.icon
-                className={`w-[17px] h-[17px] shrink-0 ${isActive ? 'text-indigo-300' : 'text-slate-400 group-hover:text-slate-300'}`}
+                className={`w-[17px] h-[17px] shrink-0 ${isActive ? 'text-gold-light' : 'text-white/60 group-hover:text-white/80'}`}
               />
               <span className='flex-1'>{item.name}</span>
               {isActive && (
-                <ChevronRightIcon className='w-3.5 h-3.5 text-indigo-500/50' />
+                <ChevronRightIcon className='w-3.5 h-3.5 text-gold/70' />
               )}
             </Link>
           )
@@ -123,10 +140,10 @@ const Sidebar = () => {
       </div>
 
       {/* Logout */}
-      <div className='p-3 border-t border-white/6'>
+      <div className='p-3 border-t border-white/10'>
         <button
           onClick={handleLogout}
-          className='flex items-center gap-3 w-full px-3 py-2.5 rounded-md text-[13px] font-medium text-slate-400 hover:text-rose-400 hover:bg-rose-500/8 transition-all duration-150'
+          className='flex items-center gap-3 w-full px-3 py-2.5 rounded-md text-[13px] font-medium text-white/60 hover:text-gold-light hover:bg-white/5 transition-all duration-150'
         >
           <LogOutIcon className='w-[17px] h-[17px]' />
           <span>Log out</span>
@@ -140,7 +157,7 @@ const Sidebar = () => {
       {/* Mobile hamburger button */}
       <button
         onClick={() => setMobileOpen(true)}
-        className='lg:hidden fixed top-4 left-4 z-50 p-2 bg-slate-900 text-white rounded-lg shadow-lg border border-white/10'
+        className='lg:hidden fixed top-4 left-4 z-50 p-2 bg-brand-dark text-white rounded-lg shadow-lg border border-white/10'
       >
         <MenuIcon size={20} />
       </button>
@@ -154,13 +171,13 @@ const Sidebar = () => {
       )}
 
       {/* Sidebar - desktop */}
-      <aside className='hidden lg:flex flex-col h-full w-[260px] bg-linear-to-b from-slate-900 via-slate-900 to-slate-950 text-white shrink-0 border-r border-white/4'>
+      <aside className='hidden lg:flex flex-col h-full w-[260px] bg-linear-to-b from-brand-dark via-brand-dark to-brand text-white shrink-0 border-r border-white/10'>
         {sidebarContent}
       </aside>
 
       {/* Sidebar - mobile */}
       <aside
-        className={`lg:hidden fixed inset-y-0 left-0 w-72 bg-linear-to-b from-slate-900 via-slate-900 to-slate-950 text-white z-50 flex flex-col transform transition-transform duration-300 ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        className={`lg:hidden fixed inset-y-0 left-0 w-72 bg-linear-to-b from-brand-dark via-brand-dark to-brand text-white z-50 flex flex-col transform transition-transform duration-300 ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
         {sidebarContent}
       </aside>
