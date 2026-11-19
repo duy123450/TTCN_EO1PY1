@@ -4,6 +4,8 @@ import pool from './config/db.js'
 
 import authRoutes from './routes/authRoutes.js'
 import employeeRoutes from './routes/employeeRoutes.js'
+import shiftRoutes from './routes/shiftRoutes.js'
+import availabilityRoutes from './routes/availabilityRoutes.js'
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -37,6 +39,8 @@ app.use(express.json())
 
 app.use('/api/auth', authRoutes)
 app.use('/api/employees', employeeRoutes)
+app.use('/api/shifts', shiftRoutes)
+app.use('/api/availability', availabilityRoutes)
 
 app.get('/', (req, res) => {
     res.json({
