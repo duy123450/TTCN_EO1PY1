@@ -1,6 +1,12 @@
-import { Pencil } from 'lucide-react'
+import { LoaderCircle, Pencil, Trash2 } from 'lucide-react'
 
-const EmployeeCard = ({ employee, onEdit }) => {
+const EmployeeCard = ({
+  employee,
+  onEdit,
+  onDelete,
+  isDeleting,
+  deleteDisabled,
+}) => {
   return (
     <article className='group relative card card-hover overflow-hidden'>
       <div className='flex aspect-4/3 items-center justify-center bg-background'>
@@ -8,14 +14,29 @@ const EmployeeCard = ({ employee, onEdit }) => {
           {employee.full_name?.trim().charAt(0) || '—'}
         </div>
       </div>
-      <button
-        type='button'
-        onClick={() => onEdit(employee)}
-        aria-label={`Edit ${employee.full_name || 'employee'}`}
-        className='absolute right-3 top-3 rounded-lg bg-surface/90 p-2.5 text-text-secondary shadow-sm transition-colors hover:text-brand'
-      >
-        <Pencil className='h-4 w-4' />
-      </button>
+      <div className='absolute right-3 top-3 flex gap-2'>
+        <button
+          type='button'
+          onClick={() => onEdit(employee)}
+          aria-label={`Edit ${employee.full_name || 'employee'}`}
+          className='rounded-lg bg-surface/90 p-2.5 text-text-secondary shadow-sm transition-colors hover:text-brand'
+        >
+          <Pencil className='h-4 w-4' />
+        </button>
+        <button
+          type='button'
+          onClick={() => onDelete(employee)}
+          aria-label={`Delete ${employee.full_name || 'employee'}`}
+          disabled={deleteDisabled}
+          className='rounded-lg bg-surface/90 p-2.5 text-text-secondary shadow-sm transition-colors hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-50'
+        >
+          {isDeleting ? (
+            <LoaderCircle className='h-4 w-4 animate-spin' />
+          ) : (
+            <Trash2 className='h-4 w-4' />
+          )}
+        </button>
+      </div>
       <div className='p-5'>
         <h3 className='font-medium text-text-primary'>
           {employee.full_name || 'Name unavailable'}

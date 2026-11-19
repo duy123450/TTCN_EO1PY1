@@ -1,6 +1,9 @@
 import express from 'express'
-const router = express.Router()
-
+import {
+    authenticateToken,
+    authorizeRoles
+} from '../middleware/authMiddleware.js'
+import { requireEmployeeOwnership } from '../middleware/employeeOwnershipMiddleware.js'
 import {
     getEmployees,
     getEmployeeById,
@@ -9,10 +12,19 @@ import {
     deleteEmployee
 } from '../controllers/employeeController.js'
 
-router.get('/', getEmployees)
-router.get('/:id', getEmployeeById)
-router.post('/', createEmployee)
-router.put('/:id', updateEmployee)
-router.delete('/:id', deleteEmployee)
+const router = express.Router()
+
+router.use(authenticateToken)
+
+router.get('/', authorizeRoles('MANAGER'), getEmployees)
+router.get(
+    '/:id',
+    authorizeRoles('MANAGER', 'EMPLOYEE'),
+    requireEmployeeOwnership,
+    getEmployeeById
+)
+router.post('/', authorizeRoles('MANAGER'), createEmployee)
+router.put('/:id', authorizeRoles('MANAGER'), updateEmployee)
+router.delete('/:id', authorizeRoles('MANAGER'), deleteEmployee)
 
 export default router
