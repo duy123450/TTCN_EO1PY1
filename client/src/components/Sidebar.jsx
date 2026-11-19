@@ -18,13 +18,14 @@ import {
   UsersIcon,
   XIcon,
 } from 'lucide-react'
+import { useAuth } from '../context/AuthContext'
 
 const Sidebar = ({ role = 'EMPLOYEE' }) => {
   const { pathname } = useLocation()
-  const username = dummyProfileData.full_name ?? dummyProfileData.username
+  const { user, logout } = useAuth()
+  const username = user?.username || dummyProfileData.full_name || dummyProfileData.username
   const [mobileOpen, setMobileOpen] = useState(false)
 
-  // Close mobile sidebar on route change
   useEffect(() => {
     setMobileOpen(false)
   }, [pathname])
@@ -56,8 +57,8 @@ const Sidebar = ({ role = 'EMPLOYEE' }) => {
   const roleLabel =
     role === 'MANAGER' ? 'Store Manager' : role === 'EMPLOYEE' ? 'Employee' : ''
 
-  const handleLogout = () => {
-    window.location.href = '/login'
+  const handleLogout = async () => {
+    await logout()
   }
 
   const sidebarContent = (

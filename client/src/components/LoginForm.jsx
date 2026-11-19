@@ -1,17 +1,38 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import LoginLeftSide from './LoginLeftSide'
 import { ArrowLeftIcon, EyeIcon, EyeOffIcon, Loader2Icon } from 'lucide-react'
 import { useState } from 'react'
+import { useAuth } from '../context/AuthContext'
+import { validateLoginInput } from '../utils/validation'
 
 const LoginForm = ({ role, title, subtitle }) => {
-  const [email, setEmail] = useState('')
+  const navigate = useNavigate()
+  const { login } = useAuth()
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
+  const handleSubmit = async (event) => {
+    event.preventDefault()
+
+    const validationMessage = validateLoginInput({ username, password })
+    if (validationMessage) {
+      setError(validationMessage)
+      return
+    }
+
+    try {
+      setError('')
+      setLoading(true)
+      await login(username, password, role)
+      navigate('/dashboard', { replace: true })
+    } catch (submitError) {
+      setError(submitError?.response?.data?.message || submitError.message || 'Login failed. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -44,14 +65,15 @@ const LoginForm = ({ role, title, subtitle }) => {
           <form className='space-y-5' onSubmit={handleSubmit}>
             <div>
               <label className='block text-sm font-medium text-text-secondary mb-2'>
-                Email address
+                Username
               </label>
               <input
-                type='email'
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type='text'
+                value={username}
+                onChange={(event) => setUsername(event.target.value)}
                 required
-                placeholder='abc@gmail.com'
+                placeholder='Enter your username'
+                autoComplete='username'
               />
             </div>
             <div>
@@ -61,10 +83,12 @@ const LoginForm = ({ role, title, subtitle }) => {
               <div className='relative'>
                 <input
                   type={showPassword ? 'text' : 'password'}
-                  onChange={(e) => setPassword(e.target.value)}
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
                   required
                   className='pr-11'
                   placeholder='••••••••'
+                  autoComplete='current-password'
                 />
                 <button
                   type='button'

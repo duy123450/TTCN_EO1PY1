@@ -2,14 +2,40 @@ import express from 'express'
 import cors from 'cors'
 import pool from './config/db.js'
 
+import authRoutes from './routes/authRoutes.js'
 import employeeRoutes from './routes/employeeRoutes.js'
 
 const app = express()
 const PORT = process.env.PORT || 3000
+const configuredOrigins = (process.env.CORS_ORIGINS || '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean)
+const allowedOrigins = new Set(
+    configuredOrigins.length > 0
+        ? configuredOrigins
+        : ['http://localhost:5173']
+)
 
-app.use(cors())
+if (allowedOrigins.has('*')) {
+    throw new Error('CORS_ORIGINS must list exact origins when credentials are enabled')
+}
+
+app.use(
+    cors({
+        origin: (origin, callback) => {
+            if (!origin || allowedOrigins.has(origin)) {
+                return callback(null, true)
+            }
+
+            return callback(null, false)
+        },
+        credentials: true
+    })
+)
 app.use(express.json())
 
+app.use('/api/auth', authRoutes)
 app.use('/api/employees', employeeRoutes)
 
 app.get('/', (req, res) => {
