@@ -1,6 +1,10 @@
 import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Loader2Icon } from 'lucide-react'
+import {
+  employeeCreateSchema,
+  employeeUpdateSchema,
+} from '../schemas/employeeSchema'
 
 const vietnamDateFormatter = new Intl.DateTimeFormat('en-US', {
   timeZone: 'Asia/Ho_Chi_Minh',
@@ -51,6 +55,25 @@ const getInitialFormValues = (employee) => ({
 const EmployeeForm = ({ initData, onSuccess, onCancel }) => {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
+  const [validationState, setValidationState] = useState(() => ({
+    employee: initData,
+    errors: {},
+  }))
+  const validationErrors =
+    validationState.employee === initData ? validationState.errors : {}
+  const setValidationErrors = (nextErrors) => {
+    setValidationState((currentState) => {
+      const currentErrors =
+        currentState.employee === initData ? currentState.errors : {}
+      return {
+        employee: initData,
+        errors:
+          typeof nextErrors === 'function'
+            ? nextErrors(currentErrors)
+            : nextErrors,
+      }
+    })
+  }
   const [formState, setFormState] = useState(() => ({
     employee: initData,
     values: getInitialFormValues(initData),
@@ -68,6 +91,56 @@ const EmployeeForm = ({ initData, onSuccess, onCancel }) => {
       employee: initData,
       values: { ...formValues, [name]: value },
     })
+    setValidationErrors((currentErrors) => {
+      if (!currentErrors[name]) {
+        return currentErrors
+      }
+      const nextErrors = { ...currentErrors }
+      delete nextErrors[name]
+      return nextErrors
+    })
+  }
+
+  const clearFieldError = (fieldName) => {
+    setValidationErrors((currentErrors) => {
+      if (!currentErrors[fieldName]) {
+        return currentErrors
+      }
+      const nextErrors = { ...currentErrors }
+      delete nextErrors[fieldName]
+      return nextErrors
+    })
+  }
+
+  const getValidationErrors = (issues) =>
+    issues.reduce((errors, issue) => {
+      const field = issue.path[0]
+      if (typeof field === 'string' && !errors[field]) {
+        errors[field] = issue.message
+      }
+      return errors
+    }, {})
+
+  const renderFieldError = (fieldName) =>
+    validationErrors[fieldName] ? (
+      <p role='alert' className='mt-1 text-xs text-rose-700'>
+        {validationErrors[fieldName]}
+      </p>
+    ) : null
+
+  const employeeSchema = isEditMode
+    ? employeeUpdateSchema
+    : employeeCreateSchema
+
+  const validateEmployeeData = (employeeData) => {
+    const result = employeeSchema.safeParse(employeeData)
+    if (!result.success) {
+      setValidationErrors(getValidationErrors(result.error.issues))
+      return null
+    }
+
+    setValidationErrors({})
+    return result.data
   }
 
   const handleSubmit = async (e) => {
@@ -101,10 +174,15 @@ const EmployeeForm = ({ initData, onSuccess, onCancel }) => {
           start_date: formValues.start_date,
         }
 
+    const validatedEmployeeData = validateEmployeeData(employeeData)
+    if (!validatedEmployeeData) {
+      return
+    }
+
     submittingRef.current = true
     setLoading(true)
     try {
-      await onSuccess?.(employeeData)
+      await onSuccess?.(validatedEmployeeData)
     } finally {
       submittingRef.current = false
       setLoading(false)
@@ -133,7 +211,10 @@ const EmployeeForm = ({ initData, onSuccess, onCancel }) => {
                   required
                   maxLength={50}
                   autoComplete='username'
+                  onChange={() => clearFieldError('username')}
+                  aria-invalid={Boolean(validationErrors.username)}
                 />
+                {renderFieldError('username')}
               </div>
               <div>
                 <label className='block mb-2' htmlFor='password'>
@@ -145,7 +226,10 @@ const EmployeeForm = ({ initData, onSuccess, onCancel }) => {
                   type='password'
                   required
                   autoComplete='new-password'
+                  onChange={() => clearFieldError('password')}
+                  aria-invalid={Boolean(validationErrors.password)}
                 />
+                {renderFieldError('password')}
               </div>
             </>
           )}
@@ -160,7 +244,9 @@ const EmployeeForm = ({ initData, onSuccess, onCancel }) => {
               maxLength={100}
               value={formValues.full_name}
               onChange={handleFieldChange}
+              aria-invalid={Boolean(validationErrors.full_name)}
             />
+            {renderFieldError('full_name')}
           </div>
           <div>
             <label className='block mb-2' htmlFor='phone'>
@@ -174,7 +260,9 @@ const EmployeeForm = ({ initData, onSuccess, onCancel }) => {
               maxLength={15}
               value={formValues.phone}
               onChange={handleFieldChange}
+              aria-invalid={Boolean(validationErrors.phone)}
             />
+            {renderFieldError('phone')}
           </div>
           <div>
             <label className='block mb-2' htmlFor='date_of_birth'>
@@ -186,7 +274,9 @@ const EmployeeForm = ({ initData, onSuccess, onCancel }) => {
               type='date'
               value={formValues.date_of_birth}
               onChange={handleFieldChange}
+              aria-invalid={Boolean(validationErrors.date_of_birth)}
             />
+            {renderFieldError('date_of_birth')}
           </div>
         </div>
       </div>
@@ -206,6 +296,7 @@ const EmployeeForm = ({ initData, onSuccess, onCancel }) => {
               value={formValues.employee_type}
               onChange={handleFieldChange}
               required
+              aria-invalid={Boolean(validationErrors.employee_type)}
             >
               <option value='' disabled>
                 Select employee type
@@ -213,6 +304,7 @@ const EmployeeForm = ({ initData, onSuccess, onCancel }) => {
               <option value='PART_TIME'>Part time</option>
               <option value='FULL_TIME'>Full time</option>
             </select>
+            {renderFieldError('employee_type')}
           </div>
           <div>
             <label className='block mb-2' htmlFor='start_date'>
@@ -225,7 +317,9 @@ const EmployeeForm = ({ initData, onSuccess, onCancel }) => {
               required
               value={formValues.start_date}
               onChange={handleFieldChange}
+              aria-invalid={Boolean(validationErrors.start_date)}
             />
+            {renderFieldError('start_date')}
           </div>
           {isEditMode && (
             <>
@@ -238,12 +332,14 @@ const EmployeeForm = ({ initData, onSuccess, onCancel }) => {
                   name='employment_status'
                   value={formValues.employment_status}
                   onChange={handleFieldChange}
+                  aria-invalid={Boolean(validationErrors.employment_status)}
                 >
                   <option value=''>No change</option>
                   <option value='ACTIVE'>Active</option>
                   <option value='ON_LEAVE'>On leave</option>
                   <option value='RESIGNED'>Resigned</option>
                 </select>
+                {renderFieldError('employment_status')}
               </div>
               <div>
                 <label className='block mb-2' htmlFor='probation_status'>
@@ -254,6 +350,7 @@ const EmployeeForm = ({ initData, onSuccess, onCancel }) => {
                   name='probation_status'
                   value={formValues.probation_status}
                   onChange={handleFieldChange}
+                  aria-invalid={Boolean(validationErrors.probation_status)}
                 >
                   <option value=''>No change</option>
                   <option value='NOT_STARTED'>Not started</option>
@@ -261,6 +358,7 @@ const EmployeeForm = ({ initData, onSuccess, onCancel }) => {
                   <option value='PASSED'>Passed</option>
                   <option value='FAILED'>Failed</option>
                 </select>
+                {renderFieldError('probation_status')}
               </div>
             </>
           )}

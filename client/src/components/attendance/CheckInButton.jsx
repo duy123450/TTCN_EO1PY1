@@ -1,9 +1,28 @@
 import { useState } from 'react'
 import { LogInIcon, LogOutIcon } from 'lucide-react'
 
+const formatCheckInTime = (value) => {
+  if (typeof value !== 'string' || value.trim() === '') return 'time unavailable'
+  const mysqlDate = value.match(
+    /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?/,
+  )
+  const date = mysqlDate
+    ? new Date(
+        `${mysqlDate[1]}-${mysqlDate[2]}-${mysqlDate[3]}T${mysqlDate[4]}:${mysqlDate[5]}:${mysqlDate[6] ?? '00'}+07:00`,
+      )
+    : new Date(value)
+  if (Number.isNaN(date.getTime())) return 'time unavailable'
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Ho_Chi_Minh',
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(date)
+}
+
 const CheckInButton = ({
   openRecord,
   assignedShifts,
+  processing = false,
   onCheckIn,
   onCheckOut,
 }) => {
@@ -16,9 +35,12 @@ const CheckInButton = ({
     ) ?? assignedShifts[0]
   const canCheckIn = hasOpenSession || Boolean(selectedShift)
 
-  const handleAction = () => {
+  const handleAction = async () => {
+    if (processing) return
     setFeedback(null)
-    const result = hasOpenSession ? onCheckOut() : onCheckIn(selectedShift)
+    const result = hasOpenSession
+      ? await onCheckOut()
+      : await onCheckIn(selectedShift)
     setFeedback(result)
   }
 
@@ -30,7 +52,7 @@ const CheckInButton = ({
         </h2>
         <p className='mt-1 text-sm text-text-secondary'>
           {hasOpenSession
-            ? `Checked in at ${openRecord.check_in ?? 'time unavailable'}.`
+            ? `Checked in at ${formatCheckInTime(openRecord.check_in)}.`
             : selectedShift
               ? `Published shift #${selectedShift.shift_id}: ${selectedShift.start_time}–${selectedShift.end_time}.`
               : 'No published shift is assigned to you for today. Check-in is unavailable.'}
@@ -62,10 +84,12 @@ const CheckInButton = ({
       <button
         type='button'
         onClick={handleAction}
-        disabled={!canCheckIn}
+        disabled={!canCheckIn || processing}
         className='btn-primary inline-flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-50'
       >
-        {hasOpenSession ? (
+        {processing ? (
+          'Processing...'
+        ) : hasOpenSession ? (
           <>
             <LogOutIcon className='size-4' />
             Check out

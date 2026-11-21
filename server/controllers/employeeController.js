@@ -9,34 +9,6 @@ const employeeSelect = `
     INNER JOIN users u ON u.user_id = e.user_id
 `
 
-const employeeTypes = ['PART_TIME', 'FULL_TIME']
-const employmentStatuses = ['ACTIVE', 'ON_LEAVE', 'RESIGNED']
-const probationStatuses = ['NOT_STARTED', 'IN_PROGRESS', 'PASSED', 'FAILED']
-
-const isValidDate = (value) => {
-    if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-        return false
-    }
-
-    const [year, month, day] = value.split('-').map(Number)
-    const date = new Date(0)
-    date.setUTCHours(0, 0, 0, 0)
-    date.setUTCFullYear(year, month - 1, day)
-
-    return date.toISOString().slice(0, 10) === value
-}
-
-const isNonEmptyString = (value, maxLength) =>
-    typeof value === 'string' &&
-    value.trim().length > 0 &&
-    value.trim().length <= maxLength
-
-const isValidEmployeeId = (value) =>
-    typeof value === 'string' &&
-    /^\d+$/.test(value) &&
-    Number.isSafeInteger(Number(value)) &&
-    Number(value) > 0
-
 const sendDatabaseError = (res, message, error) => {
     console.error(`${message}:`, error.message)
     return res.status(500).json({
@@ -61,17 +33,10 @@ const getEmployees = async (req, res) => {
 }
 
 const getEmployeeById = async (req, res) => {
-    if (!isValidEmployeeId(req.params.id)) {
-        return res.status(400).json({
-            success: false,
-            message: 'Invalid employee ID'
-        })
-    }
-
     try {
         const [employees] = await pool.execute(
             `${employeeSelect} WHERE e.employee_id = ?`,
-            [Number(req.params.id)]
+            [req.validated.params.id]
         )
 
         if (employees.length === 0) {
@@ -91,14 +56,7 @@ const getEmployeeById = async (req, res) => {
 }
 
 const createEmployee = async (req, res) => {
-    const body = req.body
-    if (!body || typeof body !== 'object' || Array.isArray(body)) {
-        return res.status(400).json({
-            success: false,
-            message: 'Invalid employee data'
-        })
-    }
-
+    const body = req.validated.body
     const {
         username,
         password,
@@ -108,22 +66,6 @@ const createEmployee = async (req, res) => {
         employee_type: employeeType,
         start_date: startDate
     } = body
-
-    if (
-        !isNonEmptyString(username, 50) ||
-        typeof password !== 'string' ||
-        password.length === 0 ||
-        !isNonEmptyString(fullName, 100) ||
-        !isNonEmptyString(phone, 15) ||
-        (dateOfBirth !== null && !isValidDate(dateOfBirth)) ||
-        !employeeTypes.includes(employeeType) ||
-        !isValidDate(startDate)
-    ) {
-        return res.status(400).json({
-            success: false,
-            message: 'Invalid or missing employee fields'
-        })
-    }
 
     const normalizedUsername = username.trim()
     const normalizedName = fullName.trim()
@@ -210,58 +152,8 @@ const createEmployee = async (req, res) => {
 }
 
 const updateEmployee = async (req, res) => {
-    if (!isValidEmployeeId(req.params.id)) {
-        return res.status(400).json({
-            success: false,
-            message: 'Invalid employee ID'
-        })
-    }
-
-    const body = req.body
-    const allowedFields = [
-        'full_name',
-        'phone',
-        'date_of_birth',
-        'employee_type',
-        'start_date',
-        'employment_status',
-        'probation_status'
-    ]
-
-    if (!body || typeof body !== 'object' || Array.isArray(body)) {
-        return res.status(400).json({
-            success: false,
-            message: 'Invalid employee data'
-        })
-    }
-
+    const body = req.validated.body
     const submittedFields = Object.keys(body)
-    if (
-        submittedFields.length === 0 ||
-        submittedFields.some((field) => !allowedFields.includes(field))
-    ) {
-        return res.status(400).json({
-            success: false,
-            message: 'No editable employee fields provided'
-        })
-    }
-
-    const validators = {
-        full_name: (value) => isNonEmptyString(value, 100),
-        phone: (value) => isNonEmptyString(value, 15),
-        date_of_birth: (value) => value === null || isValidDate(value),
-        employee_type: (value) => employeeTypes.includes(value),
-        start_date: isValidDate,
-        employment_status: (value) => employmentStatuses.includes(value),
-        probation_status: (value) => probationStatuses.includes(value)
-    }
-
-    if (submittedFields.some((field) => !validators[field](body[field]))) {
-        return res.status(400).json({
-            success: false,
-            message: 'Invalid employee field value'
-        })
-    }
 
     const assignments = []
     const values = []
@@ -277,7 +169,7 @@ const updateEmployee = async (req, res) => {
     }
 
     try {
-        const employeeId = Number(req.params.id)
+        const employeeId = req.validated.params.id
         const [existingEmployees] = await pool.execute(
             'SELECT employee_id FROM employees WHERE employee_id = ?',
             [employeeId]
@@ -310,13 +202,6 @@ const updateEmployee = async (req, res) => {
 }
 
 const deleteEmployee = async (req, res) => {
-    if (!isValidEmployeeId(req.params.id)) {
-        return res.status(400).json({
-            success: false,
-            message: 'Invalid employee ID'
-        })
-    }
-
     let connection
     let transactionStarted = false
 
@@ -329,7 +214,7 @@ const deleteEmployee = async (req, res) => {
             `${employeeSelect}
              WHERE e.employee_id = ?
              FOR UPDATE`,
-            [Number(req.params.id)]
+            [req.validated.params.id]
         )
 
         if (employees.length === 0) {

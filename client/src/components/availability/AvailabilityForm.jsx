@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { PlusIcon, Trash2Icon } from 'lucide-react'
+import { createAvailabilityFormSchema } from '../../schemas/availabilitySchema'
 
 const makeDraft = (records) => {
   const draft = Array.from({ length: 7 }, () => ({
@@ -33,9 +34,39 @@ const AvailabilityForm = ({
   onSave,
 }) => {
   const [days, setDays] = useState(() => makeDraft(records))
-  const [error, setError] = useState('')
+  const [validationErrors, setValidationErrors] = useState({})
   const [saved, setSaved] = useState(false)
   const intervalKey = useRef(0)
+
+  const getValidationErrors = (issues) =>
+    issues.reduce((errors, issue) => {
+      const field = issue.path.join('.')
+      if (field && !errors[field]) {
+        errors[field] = issue.message
+      }
+      return errors
+    }, {})
+
+  const clearDayErrors = (dayIndex) => {
+    const dayPath = `days.${dayIndex}.`
+    setValidationErrors((currentErrors) => {
+      const nextErrors = Object.fromEntries(
+        Object.entries(currentErrors).filter(
+          ([field]) => !field.startsWith(dayPath),
+        ),
+      )
+      return Object.keys(nextErrors).length === Object.keys(currentErrors).length
+        ? currentErrors
+        : nextErrors
+    })
+  }
+
+  const renderFieldError = (fieldPath) =>
+    validationErrors[fieldPath] ? (
+      <p role='alert' className='mt-1 text-xs text-rose-700'>
+        {validationErrors[fieldPath]}
+      </p>
+    ) : null
 
   const updateDay = (dayIndex, update) => {
     setDays((currentDays) =>
@@ -43,7 +74,7 @@ const AvailabilityForm = ({
         index === dayIndex ? update(day) : day,
       ),
     )
-    setError('')
+    clearDayErrors(dayIndex)
     setSaved(false)
   }
 
@@ -90,38 +121,10 @@ const AvailabilityForm = ({
 
   const handleSubmit = (event) => {
     event.preventDefault()
-
-    for (let dayIndex = 0; dayIndex < days.length; dayIndex += 1) {
-      const day = days[dayIndex]
-      if (day.isOff && day.intervals.length > 0) {
-        setError(`${dayNames[dayIndex]} cannot be off and available.`)
-        return
-      }
-
-      const sortedIntervals = [...day.intervals].sort((a, b) =>
-        a.start_time.localeCompare(b.start_time),
-      )
-
-      for (let index = 0; index < sortedIntervals.length; index += 1) {
-        const interval = sortedIntervals[index]
-        if (!interval.start_time || !interval.end_time) {
-          setError(`Enter both times for every ${dayNames[dayIndex]} interval.`)
-          return
-        }
-        if (interval.start_time >= interval.end_time) {
-          setError(
-            `${dayNames[dayIndex]} intervals must end after they start.`,
-          )
-          return
-        }
-        if (
-          index > 0 &&
-          interval.start_time < sortedIntervals[index - 1].end_time
-        ) {
-          setError(`${dayNames[dayIndex]} intervals cannot overlap.`)
-          return
-        }
-      }
+    const result = createAvailabilityFormSchema(dayNames).safeParse({ days })
+    if (!result.success) {
+      setValidationErrors(getValidationErrors(result.error.issues))
+      return
     }
 
     const updatedRecords = days.flatMap((day, index) => {
@@ -145,7 +148,7 @@ const AvailabilityForm = ({
     })
 
     onSave(updatedRecords)
-    setError('')
+    setValidationErrors({})
     setSaved(true)
   }
 
@@ -174,15 +177,23 @@ const AvailabilityForm = ({
           >
             <div className='flex flex-wrap items-center justify-between gap-3'>
               <h3 className='font-medium text-text-primary'>{dayName}</h3>
-              <label className='flex items-center gap-2 text-sm text-text-secondary'>
-                <input
-                  type='checkbox'
-                  checked={day.isOff}
-                  onChange={(event) => setDayOff(dayIndex, event.target.checked)}
-                  className='size-4 accent-brand'
-                />
-                Mark day off
-              </label>
+              <div>
+                <label className='flex items-center gap-2 text-sm text-text-secondary'>
+                  <input
+                    type='checkbox'
+                    checked={day.isOff}
+                    onChange={(event) =>
+                      setDayOff(dayIndex, event.target.checked)
+                    }
+                    className='size-4 accent-brand'
+                    aria-invalid={Boolean(
+                      validationErrors[`days.${dayIndex}.isOff`],
+                    )}
+                  />
+                  Mark day off
+                </label>
+                {renderFieldError(`days.${dayIndex}.isOff`)}
+              </div>
             </div>
 
             {day.isOff ? (
@@ -196,38 +207,58 @@ const AvailabilityForm = ({
                     key={interval.key}
                     className='flex flex-col gap-2 sm:flex-row sm:items-end'
                   >
-                    <label className='flex-1 text-xs font-medium text-text-secondary'>
-                      Interval {intervalIndex + 1} start
-                      <input
-                        type='time'
-                        value={interval.start_time}
-                        onChange={(event) =>
-                          updateInterval(
-                            dayIndex,
-                            interval.key,
-                            'start_time',
-                            event.target.value,
-                          )
-                        }
-                        className='mt-1 w-full'
-                      />
-                    </label>
-                    <label className='flex-1 text-xs font-medium text-text-secondary'>
-                      End
-                      <input
-                        type='time'
-                        value={interval.end_time}
-                        onChange={(event) =>
-                          updateInterval(
-                            dayIndex,
-                            interval.key,
-                            'end_time',
-                            event.target.value,
-                          )
-                        }
-                        className='mt-1 w-full'
-                      />
-                    </label>
+                    <div className='flex-1'>
+                      <label className='text-xs font-medium text-text-secondary'>
+                        Interval {intervalIndex + 1} start
+                        <input
+                          type='time'
+                          value={interval.start_time}
+                          onChange={(event) =>
+                            updateInterval(
+                              dayIndex,
+                              interval.key,
+                              'start_time',
+                              event.target.value,
+                            )
+                          }
+                          className='mt-1 w-full'
+                          aria-invalid={Boolean(
+                            validationErrors[
+                              `days.${dayIndex}.intervals.${intervalIndex}.start_time`
+                            ],
+                          )}
+                        />
+                      </label>
+                      {renderFieldError(
+                        `days.${dayIndex}.intervals.${intervalIndex}.start_time`,
+                      )}
+                    </div>
+                    <div className='flex-1'>
+                      <label className='text-xs font-medium text-text-secondary'>
+                        End
+                        <input
+                          type='time'
+                          value={interval.end_time}
+                          onChange={(event) =>
+                            updateInterval(
+                              dayIndex,
+                              interval.key,
+                              'end_time',
+                              event.target.value,
+                            )
+                          }
+                          className='mt-1 w-full'
+                          aria-invalid={Boolean(
+                            validationErrors[
+                              `days.${dayIndex}.intervals.${intervalIndex}.end_time`
+                            ],
+                          )}
+                        />
+                      </label>
+                      {renderFieldError(
+                        `days.${dayIndex}.intervals.${intervalIndex}.end_time`,
+                      )}
+                    </div>
                     <button
                       type='button'
                       onClick={() => removeInterval(dayIndex, interval.key)}
@@ -253,9 +284,9 @@ const AvailabilityForm = ({
         )
       })}
 
-      {error && (
+      {validationErrors.days && (
         <p role='alert' className='rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700'>
-          {error}
+          {validationErrors.days}
         </p>
       )}
       {saved && (
