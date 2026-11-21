@@ -6,6 +6,7 @@ import authRoutes from './routes/authRoutes.js'
 import employeeRoutes from './routes/employeeRoutes.js'
 import shiftRoutes from './routes/shiftRoutes.js'
 import availabilityRoutes from './routes/availabilityRoutes.js'
+import attendanceRoutes from './routes/attendanceRoutes.js'
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -41,6 +42,7 @@ app.use('/api/auth', authRoutes)
 app.use('/api/employees', employeeRoutes)
 app.use('/api/shifts', shiftRoutes)
 app.use('/api/availability', availabilityRoutes)
+app.use('/api/attendance', attendanceRoutes)
 
 app.get('/', (req, res) => {
     res.json({

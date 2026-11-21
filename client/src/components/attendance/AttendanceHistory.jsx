@@ -1,23 +1,13 @@
 const parseDateTime = (value) => {
   if (typeof value !== 'string' || value.trim() === '') return null
-  const match = value.match(
-    /^(\d{4})-(\d{2})-(\d{2})[ T]([01]\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?$/,
+  const mysqlDate = value.match(
+    /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?/,
   )
-  if (!match) return null
-  const [, yearText, monthText, dayText, hourText, minuteText, secondText] =
-    match
-  const year = Number(yearText)
-  const month = Number(monthText)
-  const day = Number(dayText)
-  const date = new Date(year, month - 1, day)
-  if (
-    date.getFullYear() !== year ||
-    date.getMonth() !== month - 1 ||
-    date.getDate() !== day
-  ) {
-    return null
-  }
-  date.setHours(Number(hourText), Number(minuteText), Number(secondText ?? 0), 0)
+  const date = mysqlDate
+    ? new Date(
+        `${mysqlDate[1]}-${mysqlDate[2]}-${mysqlDate[3]}T${mysqlDate[4]}:${mysqlDate[5]}:${mysqlDate[6] ?? '00'}+07:00`,
+      )
+    : new Date(value)
   return Number.isNaN(date.getTime()) ? null : date
 }
 
@@ -25,6 +15,7 @@ const formatDate = (value) => {
   const date = parseDateTime(value)
   return date
     ? new Intl.DateTimeFormat('en', {
+        timeZone: 'Asia/Ho_Chi_Minh',
         year: 'numeric',
         month: 'short',
         day: 'numeric',
@@ -36,6 +27,7 @@ const formatTime = (value) => {
   const date = parseDateTime(value)
   return date
     ? new Intl.DateTimeFormat('en', {
+        timeZone: 'Asia/Ho_Chi_Minh',
         hour: 'numeric',
         minute: '2-digit',
       }).format(date)

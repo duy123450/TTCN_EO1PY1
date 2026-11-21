@@ -6,45 +6,6 @@ const shiftSelect = `
     FROM shifts
 `
 
-const isValidDate = (value) => {
-    if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-        return false
-    }
-
-    const [year, month, day] = value.split('-').map(Number)
-    const date = new Date(0)
-    date.setUTCHours(0, 0, 0, 0)
-    date.setUTCFullYear(year, month - 1, day)
-
-    return date.toISOString().slice(0, 10) === value
-}
-
-const toPositiveId = (value) => {
-    if (typeof value === 'number') {
-        return Number.isSafeInteger(value) && value > 0 ? value : null
-    }
-
-    if (
-        typeof value !== 'string' ||
-        !/^\d+$/.test(value) ||
-        !Number.isSafeInteger(Number(value)) ||
-        Number(value) <= 0
-    ) {
-        return null
-    }
-
-    return Number(value)
-}
-
-const normalizeTime = (value) => {
-    if (typeof value !== 'string') {
-        return null
-    }
-
-    const match = value.match(/^([01]\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?$/)
-    return match ? `${match[1]}:${match[2]}:${match[3] ?? '00'}` : null
-}
-
 const sendDatabaseError = (res, message, error) => {
     console.error(`${message}:`, error.message)
     return res.status(500).json({ success: false, message })
@@ -113,28 +74,19 @@ const findOverlappingShift = async (
 }
 
 const getShifts = async (req, res) => {
-    const { week_start: weekStart, week_end: weekEnd } = req.query
-    if (!isValidDate(weekStart) || !isValidDate(weekEnd) || weekStart > weekEnd) {
-        return res.status(400).json({
-            success: false,
-            message: 'Valid week_start and week_end dates are required',
-        })
-    }
+    const {
+        week_start: weekStart,
+        week_end: weekEnd,
+        employee_id: employeeIdFilter,
+    } = req.validated.query
 
     const where = ['work_date BETWEEN ? AND ?']
     const params = [weekStart, weekEnd]
 
     if (req.user.role === 'MANAGER') {
-        if (req.query.employee_id !== undefined) {
-            const employeeId = toPositiveId(req.query.employee_id)
-            if (employeeId === null) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Invalid employee ID',
-                })
-            }
+        if (employeeIdFilter !== undefined) {
             where.push('employee_id = ?')
-            params.push(employeeId)
+            params.push(employeeIdFilter)
         }
     } else {
         try {
@@ -167,13 +119,7 @@ const getShifts = async (req, res) => {
 }
 
 const getShiftById = async (req, res) => {
-    const shiftId = toPositiveId(req.params.id)
-    if (shiftId === null) {
-        return res.status(400).json({
-            success: false,
-            message: 'Invalid shift ID',
-        })
-    }
+    const shiftId = req.validated.params.id
 
     try {
         const params = [shiftId]
@@ -211,31 +157,12 @@ const getShiftById = async (req, res) => {
 }
 
 const createShift = async (req, res) => {
-    const body = req.body
-    if (!body || typeof body !== 'object' || Array.isArray(body)) {
-        return res.status(400).json({
-            success: false,
-            message: 'Invalid shift data',
-        })
-    }
-
-    const employeeId = toPositiveId(body.employee_id)
-    const { work_date: workDate } = body
-    const startTime = normalizeTime(body.start_time)
-    const endTime = normalizeTime(body.end_time)
-
-    if (
-        employeeId === null ||
-        !isValidDate(workDate) ||
-        startTime === null ||
-        endTime === null ||
-        endTime <= startTime
-    ) {
-        return res.status(400).json({
-            success: false,
-            message: 'Valid employee, work date, start time, and end time are required',
-        })
-    }
+    const {
+        employee_id: employeeId,
+        work_date: workDate,
+        start_time: startTime,
+        end_time: endTime,
+    } = req.validated.body
 
     let connection
     let transactionStarted = false
@@ -310,45 +237,13 @@ const createShift = async (req, res) => {
 }
 
 const updateShift = async (req, res) => {
-    const shiftId = toPositiveId(req.params.id)
-    if (shiftId === null) {
-        return res.status(400).json({
-            success: false,
-            message: 'Invalid shift ID',
-        })
-    }
-
-    const body = req.body
-    const allowedFields = ['employee_id', 'work_date', 'start_time', 'end_time']
-    if (
-        !body ||
-        typeof body !== 'object' ||
-        Array.isArray(body) ||
-        Object.keys(body).some((field) => !allowedFields.includes(field)) ||
-        allowedFields.some((field) => !Object.hasOwn(body, field))
-    ) {
-        return res.status(400).json({
-            success: false,
-            message: 'Provide only employee_id, work_date, start_time, and end_time',
-        })
-    }
-
-    const employeeId = toPositiveId(body.employee_id)
-    const { work_date: workDate } = body
-    const startTime = normalizeTime(body.start_time)
-    const endTime = normalizeTime(body.end_time)
-    if (
-        employeeId === null ||
-        !isValidDate(workDate) ||
-        startTime === null ||
-        endTime === null ||
-        endTime <= startTime
-    ) {
-        return res.status(400).json({
-            success: false,
-            message: 'Valid employee, work date, start time, and end time are required',
-        })
-    }
+    const shiftId = req.validated.params.id
+    const {
+        employee_id: employeeId,
+        work_date: workDate,
+        start_time: startTime,
+        end_time: endTime,
+    } = req.validated.body
 
     let connection
     let transactionStarted = false
@@ -474,22 +369,10 @@ const updateShift = async (req, res) => {
 }
 
 const publishShifts = async (req, res) => {
-    const body = req.body
-    const weekStart = body?.week_start
-    const weekEnd = body?.week_end
-    if (
-        !body ||
-        typeof body !== 'object' ||
-        Array.isArray(body) ||
-        !isValidDate(weekStart) ||
-        !isValidDate(weekEnd) ||
-        weekStart > weekEnd
-    ) {
-        return res.status(400).json({
-            success: false,
-            message: 'Valid week_start and week_end dates are required',
-        })
-    }
+    const {
+        week_start: weekStart,
+        week_end: weekEnd,
+    } = req.validated.body
 
     let connection
     let transactionStarted = false
@@ -527,13 +410,7 @@ const publishShifts = async (req, res) => {
 }
 
 const cancelShift = async (req, res) => {
-    const shiftId = toPositiveId(req.params.id)
-    if (shiftId === null) {
-        return res.status(400).json({
-            success: false,
-            message: 'Invalid shift ID',
-        })
-    }
+    const shiftId = req.validated.params.id
 
     let connection
     let transactionStarted = false
